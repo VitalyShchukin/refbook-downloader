@@ -11,11 +11,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class FullRefbook {
-    private List<Record> records;
+public class RecordsAndRecordColumns {
     private List<RecordColumn> recordColumns;
-    private Refbook refbook;
-    private List<RefbookColumn> refbookColumns;
-    private RefbookVersion refbookVersion;
-    private ExternalRefbook externalRefbook;
+    private List<Record> records;
 }

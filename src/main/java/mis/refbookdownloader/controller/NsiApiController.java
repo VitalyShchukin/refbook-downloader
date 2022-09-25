@@ -3,6 +3,7 @@ package mis.refbookdownloader.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import mis.refbookdownloader.model.*;
 import mis.refbookdownloader.model.rootPassport.RootPassport;
+import mis.refbookdownloader.service.DataAssist;
 import mis.refbookdownloader.service.DataMapper;
 import mis.refbookdownloader.service.NsiSwagger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ public class NsiApiController {
 
     @Autowired
     private DataMapper dataMapper;
+    @Autowired
+    private DataAssist dataAssist;
 
     @PostMapping("/ref")
     public String getNsiData(@RequestParam(value = "refbookName") String refbookName,
@@ -34,13 +37,52 @@ public class NsiApiController {
 
         int page = 0; //start page in request
         List<List<Object>> listOfJsonRecords = NsiSwagger.getListOfRecords(refbookName, version, page);
-        FullRefbook frb = dataMapper.getMappedData(rootPassport, listOfJsonRecords);
 
-        entityManager.persist(frb.getRefbook());
-        entityManager.persist(frb.getExternalRefbook());
-//        for() {
-        entityManager.persist(frb.getRefbookVersion());
+        Refbook refbook = new Refbook();
+
+        if (dataAssist.checkCurrRefbookInDB(rootPassport).getId() != null) {
+            refbook = dataAssist.checkCurrRefbookInDB(rootPassport);
+        } else {
+            refbook = dataMapper.getRefbook(rootPassport);
+            entityManager.persist(refbook);
+        }
+
+        ExternalRefbook externalRefbook = new ExternalRefbook();
+        if (dataAssist.checkCurrExternalRefbookInDB(rootPassport).getId() != null) {
+            externalRefbook = dataAssist.checkCurrExternalRefbookInDB(rootPassport);
+            externalRefbook.setRefbook(refbook);
+        } else {
+            externalRefbook = dataMapper.getExternalRefbook(rootPassport);
+            externalRefbook.setId(refbook.getId());
+            externalRefbook.setRefbook(refbook);
+            entityManager.persist(externalRefbook);
+        }
+
+        RefbookVersion refbookVersion = new RefbookVersion();
+        if (dataAssist.checkCurrRefbookVersionInDB(rootPassport).getId() != null) {
+            refbookVersion = dataAssist.checkCurrRefbookVersionInDB(rootPassport);
+            refbookVersion.setRefbook(refbook);
+        } else {
+            refbookVersion = dataMapper.getRefbookVersion(rootPassport);
+            refbookVersion.setRefbook(refbook);
+            entityManager.persist(refbookVersion);
+        }
+
+        List<RefbookColumn> refbookColumns = dataMapper.getRefbookColumns(rootPassport, refbookVersion);
+        for (RefbookColumn refCols : refbookColumns) {
+            entityManager.persist(refCols);
+        }
+
+//        for(List<Object> listOfJsonRecords:listOfJsonRecords) {
+            RecordsAndRecordColumns recordsAndRecordColumns = dataMapper.getRecordsAndRecordColumns(listOfJsonRecords, refbookVersion, refbookColumns);
+            for (RecordColumn recCols : recordsAndRecordColumns.getRecordColumns()) {
+                entityManager.persist(recCols);
+            }
+            for (Record recs : recordsAndRecordColumns.getRecords()) {
+                entityManager.persist(recs);
+            }
 //        }
+
         return "redirect:/ref";
     }
 }

@@ -6,8 +6,6 @@ import mis.refbookdownloader.model.rootPassport.RootPassport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -20,44 +18,51 @@ public class DataMapper {
     @Autowired
     private DataAssist dataAssist;
 
-    public FullRefbook getMappedData(RootPassport rootPassport, List<List<Object>> listOfJsonRecords) {
-//        DataAssist dataAssist = new DataAssist();
-        FullRefbook fullRB = new FullRefbook();
-
+    public Refbook getRefbook(RootPassport rootPassport) {
         Refbook refbook = new Refbook();
+        refbook.setFullName(rootPassport.getFullName());
+        refbook.setShortName(rootPassport.getShortName());
+        refbook.setObjectId(dataAssist.findCodeOid(rootPassport.getOid()));
+        refbook.setSourceId(dataAssist.getRefSrcId(dataAssist.findRootOid(rootPassport.getOid())));
+        return refbook;
+    }
+
+    public ExternalRefbook getExternalRefbook(RootPassport rootPassport) {
         ExternalRefbook externalRefbook = new ExternalRefbook();
+        externalRefbook.setCode(rootPassport.getOid());
+        return externalRefbook;
+    }
+
+    public RefbookVersion getRefbookVersion(RootPassport rootPassport) {
         RefbookVersion refbookVersion = new RefbookVersion();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        String dateInString = rootPassport.getPublishDate();
+        LocalDate date = LocalDate.parse(dateInString, formatter);
+        refbookVersion.setDate(date);
+        refbookVersion.setVersion(rootPassport.getVersion());
+        return refbookVersion;
+    }
 
-        String rootOid = dataAssist.findRootOid(rootPassport.getOid());
-        String codeOid = dataAssist.findCodeOid(rootPassport.getOid());
-        Refbook refbookDB = dataAssist.checkRefbookInBase(rootOid, codeOid);
-
-        if (refbookDB == null) {
-            refbook.setFullName(rootPassport.getFullName());
-            refbook.setShortName(rootPassport.getShortName());
-            refbook.setObjectId(dataAssist.findCodeOid(rootPassport.getOid()));
-            refbook.setSourceId(dataAssist.getRefSrcId(rootOid));
-            refbook.setRefbookVersion(refbookVersion);
-        }
-
-        //into mdm_record_column
-        List<Record> records = new ArrayList<>();
-        List<RecordColumn> recordColumns = new ArrayList<>();
-
-        //into mdm_refbook_column
+    public List<RefbookColumn> getRefbookColumns(RootPassport rootPassport, RefbookVersion refbookVersion) {
         List<RefbookColumn> refbookColumns = new ArrayList<>();
         for (RootField i : rootPassport.getFields()) {
             RefbookColumn col = new RefbookColumn();
             col.setName(i.getField());
+            col.setTitle(i.getAlias());
             col.setRefbookVersion(refbookVersion);
-            col.setRecordColumns(recordColumns);
             refbookColumns.add(col);
         }
+        return refbookColumns;
+    }
+
+    public RecordsAndRecordColumns getRecordsAndRecordColumns(List<List<Object>> listOfJsonRecords, RefbookVersion refbookVersion, List<RefbookColumn> refbookColumns) {
+        RecordsAndRecordColumns recordsAndRecordColumns = new RecordsAndRecordColumns();
+        List<RecordColumn> recordColumns = new ArrayList<>();
+        List<Record> records = new ArrayList<>();
 
         for (List<Object> i : listOfJsonRecords) {
             Record rec = new Record();
             rec.setRefbookVersion(refbookVersion);
-            rec.setRecordColumns(recordColumns);
             records.add(rec);
             for (int j = 0; j < i.size(); j++) {
                 RecordColumn recCol = new RecordColumn();
@@ -71,28 +76,10 @@ public class DataMapper {
                 recordColumns.add(recCol);
             }
         }
+        recordsAndRecordColumns.setRecords(records);
+        recordsAndRecordColumns.setRecordColumns(recordColumns);
 
-        //into mdm_refbook_version
-        refbookVersion.setRefbook(refbook);
-        String dateInString = rootPassport.getPublishDate();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-        LocalDate date = LocalDate.parse(dateInString, formatter);
-        refbookVersion.setDate(date);
-        refbookVersion.setVersion(rootPassport.getVersion());
-        refbookVersion.setRefbookColumns(refbookColumns);
-
-        //into mdm_external_refbook
-        externalRefbook.setRefbook(refbook);
-        externalRefbook.setCode(rootPassport.getOid());
-
-        fullRB.setRecords(records);
-        fullRB.setExternalRefbook(externalRefbook);
-        fullRB.setRecordColumns(recordColumns);
-        fullRB.setRefbook(refbook);
-        fullRB.setRefbookColumns(refbookColumns);
-        fullRB.setRefbookVersion(refbookVersion);
-
-        return fullRB;
+        return recordsAndRecordColumns;
     }
 
     public RefbookColumn findRefbookColumn(List<RefbookColumn> refbookColumns, String recColumn) {

@@ -31,11 +31,7 @@ public class RefbookVersion {
     @Column(name = "version")
     private String version;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
+    @OneToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "refbook_id",referencedColumnName = "id")
     private Refbook refbook;
-
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "refbookVersion", cascade = CascadeType.PERSIST)
-    @Fetch(FetchMode.SUBSELECT)
-    private List<RefbookColumn> refbookColumns;
 }

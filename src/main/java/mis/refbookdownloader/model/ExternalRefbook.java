@@ -20,8 +20,8 @@ public class ExternalRefbook {
     private Integer id;
 
     @MapsId
-    @OneToOne
-    @JoinColumn(name = "id")
+    @OneToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "id",referencedColumnName = "id")
     private Refbook refbook;
 
     @Column(name = "code")

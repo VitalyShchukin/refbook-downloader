@@ -31,10 +31,4 @@ public class Refbook {
 
     @Column(name = "source_id")
     private Integer sourceId;
-
-    @OneToOne(mappedBy = "refbook")
-    private RefbookVersion refbookVersion;
-
-    @OneToOne(mappedBy = "refbook")
-    private ExternalRefbook externalRefbook;
 }

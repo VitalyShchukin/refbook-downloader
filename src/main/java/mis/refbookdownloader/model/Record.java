@@ -26,8 +26,4 @@ public class Record {
     @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "refbook_version_id",referencedColumnName = "id")
     private RefbookVersion refbookVersion;
-
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "record", cascade = CascadeType.PERSIST)
-    @Fetch(FetchMode.SUBSELECT)
-    private List<RecordColumn> recordColumns;
 }

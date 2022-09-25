@@ -26,11 +26,10 @@ public class RefbookColumn {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "title")
+    private String title;
+
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "refbook_version_id")
     private RefbookVersion refbookVersion;
-
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "refbookColumn", cascade = CascadeType.PERSIST)
-    @Fetch(FetchMode.SUBSELECT)
-    private List<RecordColumn> recordColumns;
 }
