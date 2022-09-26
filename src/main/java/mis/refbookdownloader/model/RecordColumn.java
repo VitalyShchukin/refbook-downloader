@@ -16,7 +16,8 @@ import javax.persistence.*;
 public class RecordColumn {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mdm_record_column_seq")
+    @SequenceGenerator(name = "mdm_record_column_seq", sequenceName = "mdm_record_column_seq", allocationSize = 1)
     @Column(name = "id")
     private Integer id;
 

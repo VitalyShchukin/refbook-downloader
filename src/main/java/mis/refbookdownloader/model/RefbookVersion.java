@@ -21,7 +21,8 @@ import java.util.List;
 public class RefbookVersion {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mdm_refbook_version_seq")
+    @SequenceGenerator(name = "mdm_refbook_version_seq", sequenceName = "mdm_refbook_version_seq", allocationSize = 1)
     @Column(name = "id")
     private Integer id;
 

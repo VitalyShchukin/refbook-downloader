@@ -19,7 +19,8 @@ import java.util.List;
 public class Record {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mdm_record_seq")
+    @SequenceGenerator(name = "mdm_record_seq", sequenceName = "mdm_record_seq", allocationSize = 1)
     @Column(name = "id")
     private Integer id;
 
